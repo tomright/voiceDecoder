@@ -17,6 +17,7 @@
           max-height: 300px;
           max-width: 300px;
           margin: auto;
+          box-shadow: var(--el-box-shadow-dark);
         "
       >
         <svg
@@ -39,13 +40,7 @@
 <script></script>
 
 <style scoped>
-.microButton {
-  border-radius: 20px;
-  width: 100%;
-  height: 100%;
-  max-width: 300px;
-  max-height: 300px;
-}
+.el-main,
 .el-header {
   text-align: center;
 }
