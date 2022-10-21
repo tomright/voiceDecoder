@@ -1,0 +1,15 @@
+html,
+body,
+#app,
+.el-container,
+.el-main {
+  height: 100%;
+  width: 1280px;
+  margin: auto;
+}
+
+body {
+  color: #666666;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+}
