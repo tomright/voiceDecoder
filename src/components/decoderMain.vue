@@ -18,12 +18,6 @@
         </svg>
       </el-icon>
     </el-button>
-    <div class="audioControls">
-      <!-- <audio controls="controls">
-        <source :src="recordToPlay" type="audio/ogg" />
-        Your browser does not support the audio element.
-      </audio> -->
-    </div>
 
     <div class="textContainer">
       <DecoderText
@@ -75,28 +69,11 @@ export default {
           type: "audio/ogg; codecs=opus",
         });
         self.recordToPlay = URL.createObjectURL(audioBlob);
-        // self.oggFile = new FileReader();
-        // self.oggFile.onload = function (event) {
-        //   const srcUrl = event.target.result;
-        //   self.recordToPlay = srcUrl;
-        // };
-        // self.oggFile.readAsDataURL(audioBlob);
-        // var a = document.createElement("a");
-        // document.body.appendChild(a);
-        // a.style = "display: none";
-        // a.href = self.recordToPlay;
-        // a.download = "test.ogg";
-        // a.click();
-        // self.oggFile = new Audio(self.recordToPlay);
-        const audioPlay = document.createElement("audio");
-        const audioControls = document.querySelector(".audioControls");
-        const sourse = document.createElement("source");
-        sourse.type = "audio/ogg";
-        console.log(this.recordToPlay);
-        sourse.src = this.recordToPlay;
-        audioPlay.controls = "controls";
-        audioPlay.append(sourse);
-        audioControls.append(audioPlay);
+        this.messageStore.appendElement({
+          text: "test text",
+          audio: this.recordToPlay,
+          isPlayed: true,
+        });
       });
     },
   },
