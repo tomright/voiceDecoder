@@ -18,29 +18,44 @@
         </svg>
       </el-icon>
     </el-button>
-    <audio class="audioControls" controls="controls">
-      <source :src="recordToPlay" type="audio/ogg" />
-      <source :src="recordToPlay" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
-    <DecoderText></DecoderText>
+    <div class="audioControls">
+      <!-- <audio controls="controls">
+        <source :src="recordToPlay" type="audio/ogg" />
+        Your browser does not support the audio element.
+      </audio> -->
+    </div>
+
+    <div class="textContainer">
+      <DecoderText
+        v-for="(item, index) in messageStore.messageItems"
+        :key="index"
+        :item="item"
+      ></DecoderText>
+    </div>
   </div>
 </template>
 
 <script>
 import DecoderText from "./decoderText.vue";
+import { useMesStore } from "../store/message";
 
 export default {
   components: { DecoderText },
   data() {
     return {
       record: "",
-      recordToPlay: "/",
+      recordToPlay: undefined,
       audioChunks: [],
+      oggFile: undefined,
+      messageStore: useMesStore(),
     };
   },
   methods: {
     startRecord() {
+      this.audioChunks = [];
+      this.record = "";
+      this.recordToPlay = "";
+      this.oggFile = undefined;
       console.log("Start record");
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         this.record = new MediaRecorder(stream);
@@ -56,12 +71,32 @@ export default {
       const self = this;
       this.record.stop();
       this.record.addEventListener("stop", () => {
-        const audioBlob = new Blob(self.audioChunks, { type: "audio/ogg" });
-        console.log(audioBlob);
+        const audioBlob = new Blob(self.audioChunks, {
+          type: "audio/ogg; codecs=opus",
+        });
         self.recordToPlay = URL.createObjectURL(audioBlob);
-        const audioAuto = new Audio(self.recordToPlay);
-        audioAuto.play();
-        console.log(self.recordToPlay);
+        // self.oggFile = new FileReader();
+        // self.oggFile.onload = function (event) {
+        //   const srcUrl = event.target.result;
+        //   self.recordToPlay = srcUrl;
+        // };
+        // self.oggFile.readAsDataURL(audioBlob);
+        // var a = document.createElement("a");
+        // document.body.appendChild(a);
+        // a.style = "display: none";
+        // a.href = self.recordToPlay;
+        // a.download = "test.ogg";
+        // a.click();
+        // self.oggFile = new Audio(self.recordToPlay);
+        const audioPlay = document.createElement("audio");
+        const audioControls = document.querySelector(".audioControls");
+        const sourse = document.createElement("source");
+        sourse.type = "audio/ogg";
+        console.log(this.recordToPlay);
+        sourse.src = this.recordToPlay;
+        audioPlay.controls = "controls";
+        audioPlay.append(sourse);
+        audioControls.append(audioPlay);
       });
     },
   },
@@ -89,5 +124,15 @@ export default {
   color: blueviolet;
   align-self: center;
   width: 100%;
+}
+.textContainer {
+  align-self: center;
+  width: 100%;
+  height: 100%;
+  /* border: 2px solid green; */
+  border-radius: 10px;
+  box-shadow: var(--el-box-shadow-dark);
+  overflow: auto;
+  word-break: break-all;
 }
 </style>
