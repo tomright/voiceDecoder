@@ -28,5 +28,8 @@ export const useMesStore = defineStore("mes", {
     delete(index) {
       this.messageItems.splice(this.messageItems.indexOf(index), 1);
     },
+    appendElement(el) {
+      this.messageItems.push(el);
+    },
   },
 });
