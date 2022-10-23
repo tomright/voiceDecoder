@@ -57,7 +57,10 @@ export default {
       this.record.stop();
       this.record.addEventListener("stop", () => {
         const audioBlob = new Blob(self.audioChunks, { type: "audio/ogg" });
+        console.log(audioBlob);
         self.recordToPlay = URL.createObjectURL(audioBlob);
+        const audioAuto = new Audio(self.recordToPlay);
+        audioAuto.play();
         console.log(self.recordToPlay);
       });
     },
