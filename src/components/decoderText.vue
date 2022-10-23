@@ -75,6 +75,9 @@ export default {
       audio.onended = function () {
         self.switcherAudio = true;
       };
+      audio.suspend = function () {
+        self.switcherAudio = true;
+      };
     },
     pauseAudio() {
       this.switcherAudio = true;

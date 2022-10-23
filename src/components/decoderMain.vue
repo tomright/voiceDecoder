@@ -55,6 +55,15 @@ export default {
         this.record = new MediaRecorder(stream);
         this.record.start();
         const self = this;
+        // let stopTimer =
+        setTimeout(() => {
+          if (self.recordToPlay) {
+            console.log("азазаза сработало!");
+            return;
+          } else {
+            self.stopRecord();
+          }
+        }, 7000);
         this.record.ondataavailable = function (event) {
           self.audioChunks.push(event.data);
         };
