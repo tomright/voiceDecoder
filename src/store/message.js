@@ -46,7 +46,6 @@ export const useMesStore = defineStore("mes", {
     },
     appendElement(el) {
       el.id = this.generateID();
-      el.text = `${el.text} + ${el.id}`;
       this.messageItems.push(el);
     },
     generateID() {

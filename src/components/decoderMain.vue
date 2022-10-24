@@ -78,11 +78,6 @@ export default {
         self.recordToPlay = URL.createObjectURL(audioBlob);
         const prepareData = this.prepareDataToSend(audioBlob);
         this.sendData(prepareData);
-        this.messageStore.appendElement({
-          id: undefined,
-          text: "test text",
-          audio: this.recordToPlay,
-        });
       });
     },
     prepareDataToSend(blob) {
@@ -95,7 +90,16 @@ export default {
       const { isSuccsess, result } = await this.messageStore.send(
         fileData
       );
-
+      if (isSuccsess) {
+        this.addDataToPinia(result);
+      }
+    },
+    addDataToPinia(textResponse) {
+      this.messageStore.appendElement({
+        id: undefined,
+        text: textResponse,
+        audio: this.recordToPlay,
+      });
     },
   },
 };
