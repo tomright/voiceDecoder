@@ -72,7 +72,7 @@ export default {
     stopRecord() {
       console.log("Stop record");
       const self = this;
-      this.record.stop();
+      self.record.stop();
       this.record.addEventListener("stop", () => {
         const audioBlob = new Blob(self.audioChunks, {
           type: "audio/ogg; codecs=opus",
