@@ -21,7 +21,7 @@
 
     <div class="textContainer">
       <DecoderText
-        v-for="(item, index) in messageStore.messageItems"
+        v-for="(item, index) in messageStore.messageItems.reverse()"
         :key="index"
         :item="item"
       ></DecoderText>
