@@ -50,7 +50,6 @@ export default {
       this.record = "";
       this.recordToPlay = "";
       this.oggFile = undefined;
-      console.log("Start record");
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
@@ -70,7 +69,6 @@ export default {
         });
     },
     stopRecord() {
-      console.log("Stop record");
       const self = this;
       self.record.stop();
       this.record.addEventListener("stop", () => {
@@ -86,6 +84,7 @@ export default {
           audio: this.recordToPlay,
         });
       });
+    },
     prepareDataToSend(blob) {
       let fileSend = new File([blob], "test.ogg");
       let fileData = new FormData();

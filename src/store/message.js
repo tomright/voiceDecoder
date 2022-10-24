@@ -33,14 +33,13 @@ export const useMesStore = defineStore("mes", {
         result = response.data.result;
       } else if (response.status === 400) {
         isSuccsess = false;
-        result = response.result;
+        result = response.data.ogg;
       } else {
         isSuccsess = false;
         result = "Ошибка сервера";
       }
+
       return { isSuccsess, result };
-      console.log("Отправка данных на сервер");
-      // TODO тут еще нужно будет сразу сделать загрузку в пинию данные
     },
     delete(index) {
       this.messageItems.splice(this.messageItems.indexOf(index), 1);
@@ -49,7 +48,6 @@ export const useMesStore = defineStore("mes", {
       el.id = this.generateID();
       el.text = `${el.text} + ${el.id}`;
       this.messageItems.push(el);
-      console.log(el.id);
     },
     generateID() {
       return this.messageItems.length;
