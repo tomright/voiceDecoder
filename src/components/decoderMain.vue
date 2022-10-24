@@ -18,34 +18,50 @@
         </svg>
       </el-icon>
     </el-button>
-    <audio class="audioControls" controls="controls">
-      <source :src="recordToPlay" type="audio/ogg" />
-      <source :src="recordToPlay" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
-    <DecoderText></DecoderText>
+
+    <div class="textContainer">
+      <DecoderText
+        v-for="(item, index) in messageStore.messageItems"
+        :key="index"
+        :item="item"
+      ></DecoderText>
+    </div>
   </div>
 </template>
 
 <script>
 import DecoderText from "./decoderText.vue";
+import { useMesStore } from "../store/message";
 
 export default {
   components: { DecoderText },
   data() {
     return {
       record: "",
-      recordToPlay: "/",
+      recordToPlay: undefined,
       audioChunks: [],
+      oggFile: undefined,
+      messageStore: useMesStore(),
     };
   },
   methods: {
     startRecord() {
+      this.audioChunks = [];
+      this.record = "";
+      this.recordToPlay = "";
+      this.oggFile = undefined;
       console.log("Start record");
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         this.record = new MediaRecorder(stream);
         this.record.start();
         const self = this;
+        setTimeout(() => {
+          if (self.recordToPlay) {
+            return;
+          } else {
+            self.stopRecord();
+          }
+        }, 7000);
         this.record.ondataavailable = function (event) {
           self.audioChunks.push(event.data);
         };
@@ -54,11 +70,17 @@ export default {
     stopRecord() {
       console.log("Stop record");
       const self = this;
-      this.record.stop();
+      self.record.stop();
       this.record.addEventListener("stop", () => {
-        const audioBlob = new Blob(self.audioChunks, { type: "audio/ogg" });
+        const audioBlob = new Blob(self.audioChunks, {
+          type: "audio/ogg; codecs=opus",
+        });
         self.recordToPlay = URL.createObjectURL(audioBlob);
-        console.log(self.recordToPlay);
+        this.messageStore.appendElement({
+          text: "test text",
+          audio: this.recordToPlay,
+          isPlayed: true,
+        });
       });
     },
   },
@@ -86,5 +108,15 @@ export default {
   color: blueviolet;
   align-self: center;
   width: 100%;
+}
+.textContainer {
+  align-self: center;
+  width: 100%;
+  height: 100%;
+  /* border: 2px solid green; */
+  border-radius: 10px;
+  box-shadow: var(--el-box-shadow-dark);
+  overflow: auto;
+  word-break: break-all;
 }
 </style>
