@@ -78,19 +78,25 @@ export default {
           type: "audio/ogg; codecs=opus",
         });
         self.recordToPlay = URL.createObjectURL(audioBlob);
-        let fileSend = new File([audioBlob], "test.ogg");
-        let fileData = new FormData();
-        fileData.append("ogg", fileSend);
-
-        let { isSuccsess, result } = this.messageStore.send(fileData);
-        console.log(isSuccsess);
-        console.log(result);
+        const prepareData = this.prepareDataToSend(audioBlob);
+        this.sendData(prepareData);
         this.messageStore.appendElement({
           id: undefined,
           text: "test text",
           audio: this.recordToPlay,
         });
       });
+    prepareDataToSend(blob) {
+      let fileSend = new File([blob], "test.ogg");
+      let fileData = new FormData();
+      fileData.append("ogg", fileSend);
+      return fileData;
+    },
+    async sendData(fileData) {
+      const { isSuccsess, result } = await this.messageStore.send(
+        fileData
+      );
+
     },
   },
 };
