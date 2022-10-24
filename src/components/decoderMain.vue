@@ -76,6 +76,11 @@ export default {
           type: "audio/ogg; codecs=opus",
         });
         self.recordToPlay = URL.createObjectURL(audioBlob);
+        let fileSend = new File([audioBlob], "test.ogg");
+        let fileData = new FormData();
+        fileData.append("ogg", fileSend);
+
+        let { isSuccsess, result } = this.messageStore.send(fileData);
         this.messageStore.appendElement({
           text: "test text",
           audio: this.recordToPlay,

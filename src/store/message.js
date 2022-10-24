@@ -21,7 +21,36 @@ export const useMesStore = defineStore("mes", {
   },
   getters: {},
   actions: {
-    send(audio) {
+    async send(audio) {
+      let response;
+      const config = {
+        headers: {
+          Authorization:
+            "Token c3dd999bd9992918837b6a11cd0c2e02f340829d",
+        },
+      };
+      try {
+        response = await axios.post(
+          "http://demo.telminov.ru:8091/stt/",
+          audio,
+          config
+        );
+      } catch (error) {
+        response = error.response;
+      }
+      let isSuccsess;
+      let result;
+      if (response.status < 400) {
+        isSuccsess = true;
+        result = response.data.result;
+      } else if (response.status === 400) {
+        isSuccsess = false;
+        result = response.result;
+      } else {
+        isSuccsess = false;
+        result = "Ошибка сервера";
+      }
+      return { isSuccsess, result };
       console.log("Отправка данных на сервер");
       // TODO тут еще нужно будет сразу сделать загрузку в пинию данные
     },
