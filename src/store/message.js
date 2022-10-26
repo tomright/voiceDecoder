@@ -46,7 +46,7 @@ export const useMesStore = defineStore("mes", {
     },
     appendElement(el) {
       el.id = this.generateID();
-      this.messageItems.push(el);
+      this.messageItems.unshift(el);
     },
     generateID() {
       return this.messageItems.length;
