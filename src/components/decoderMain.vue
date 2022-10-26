@@ -1,13 +1,14 @@
 <template>
-  <div class="container">
+  <div v-if="browserCheck" class="container">
     <h3>
-      Нажми на иконку микрофона и начни говорить, ниже, придет
-      расшифровка.
+      Зажми иконку микрофона и начни говорить, когда закончишь,
+      отпусти кнопку (у нас ограничение на запись 7 секунд)
     </h3>
     <el-button
       type="success"
       class="recordButton"
       @mousedown="startRecord"
+      :disabled="buttonDisabled"
       @mouseup="stopRecord">
       <el-icon :size="200">
         <svg
@@ -19,19 +20,30 @@
         </svg>
       </el-icon>
     </el-button>
+    <h2 class="statusText">{{ statusRercord }}</h2>
 
     <div class="textContainer">
       <DecoderText
-        v-for="(item, index) in messageStore.messageItems.reverse()"
-        :key="index"
+        v-for="item in messageStore.messageItems"
+        :key="item.id"
         :item="item"></DecoderText>
     </div>
+  </div>
+  <div v-if="!browserCheck" class="container">
+    <h1>
+      К сожалению ваш браузер не поддерживает запсь ogg файлов через
+      микрофон, рекомендуем воспользоваться браузером FireFox.
+    </h1>
+    <img src="../assets/img/sorry.jpg" alt="Sorry image" />
   </div>
 </template>
 
 <script>
 import DecoderText from "./decoderText.vue";
 import { useMesStore } from "../store/message";
+import { ElMessage } from "element-plus";
+import { startsWith } from "lodash";
+import { timestamp } from "@vueuse/shared";
 
 export default {
   components: { DecoderText },
@@ -40,12 +52,26 @@ export default {
       record: "",
       recordToPlay: undefined,
       audioChunks: [],
-      oggFile: undefined,
       messageStore: useMesStore(),
+      timer: undefined,
+      browserCheck: undefined,
+      track: undefined,
+      statusRercord: "Готов к записи данных.",
+      buttonDisabled: false,
+      dateTime: {
+        createDate: undefined,
+        stopDate: undefined,
+      },
     };
+  },
+  mounted() {
+    this.browserCheck = MediaRecorder.isTypeSupported("audio/ogg");
   },
   methods: {
     startRecord() {
+      this.dateTime.createDate = Date.now();
+      this.statusRercord =
+        "Идет запись, можете говорить в микрофон! :) ";
       this.audioChunks = [];
       this.record = "";
       this.recordToPlay = "";
@@ -56,29 +82,84 @@ export default {
           this.record = new MediaRecorder(stream);
           this.record.start();
           const self = this;
-          setTimeout(() => {
-            if (self.recordToPlay) {
-              return;
-            } else {
-              self.stopRecord();
-            }
-          }, 7000);
           this.record.ondataavailable = function (event) {
             self.audioChunks.push(event.data);
+            self.track = stream.getTracks();
+            self.track[0].stop();
           };
+        })
+        .catch(function (error) {
+          if (error.name === "PermissionDeniedError") {
+            ElMessage({
+              message:
+                "Разрешения на использование камеры и микрофона не были предоставлены. " +
+                "Вам нужно разрешить странице доступ к вашим устройствам," +
+                " чтобы демо-версия работала.",
+              type: "error",
+              showClose: true,
+              duration: 3000,
+            });
+          } else if (error.name === "NotAllowedError") {
+            ElMessage({
+              message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+              type: "error",
+              showClose: true,
+              duration: 10000,
+            });
+          } else {
+            ElMessage({
+              message: `getUserMedia error: ${error.name}, ${error}`,
+              type: "error",
+              showClose: true,
+              duration: 10000,
+            });
+          }
         });
+      // const self = this;
+      this.timer = setTimeout(() => {
+        if (!this.recordToPlay) {
+          this.stopRecord();
+          ElMessage({
+            message: "7 секунд прошло, можете отпускать кнопку",
+            type: "warning",
+            showClose: true,
+            duration: 10000,
+          });
+        } else {
+          clearTimeout(this.timer);
+        }
+      }, 7000);
     },
     stopRecord() {
-      const self = this;
-      self.record.stop();
-      this.record.addEventListener("stop", () => {
-        const audioBlob = new Blob(self.audioChunks, {
-          type: "audio/ogg; codecs=opus",
+      this.buttonDisabled = true;
+      this.record.stop();
+      this.dateTime.stopDate = Date.now();
+      clearTimeout(this.timer);
+      const dateDifference =
+        this.dateTime.stopDate - this.dateTime.createDate;
+      if (dateDifference > 1000) {
+        this.statusRercord =
+          "Отправка данных на сервер для распознования!";
+        const self = this;
+        this.record.addEventListener("stop", () => {
+          const audioBlob = new Blob(self.audioChunks, {
+            type: "audio/ogg; codecs=opus",
+          });
+          self.recordToPlay = URL.createObjectURL(audioBlob);
+          const prepareData = this.prepareDataToSend(audioBlob);
+          this.sendData(prepareData);
         });
-        self.recordToPlay = URL.createObjectURL(audioBlob);
-        const prepareData = this.prepareDataToSend(audioBlob);
-        this.sendData(prepareData);
-      });
+      } else {
+        this.buttonDisabled = false;
+        this.statusRercord = "Готов к записи!";
+        ElMessage({
+          message:
+            "Запись меньше секунды, пожалуйста записывайте дольше",
+          type: "warning",
+          showClose: true,
+          duration: 5000,
+        });
+      }
     },
     prepareDataToSend(blob) {
       let fileSend = new File([blob], "test.ogg");
@@ -90,15 +171,31 @@ export default {
       const { isSuccsess, result } = await this.messageStore.send(
         fileData
       );
+      this.buttonDisabled = false;
+      this.statusRercord = "Готов к записи!";
       if (isSuccsess) {
         this.addDataToPinia(result);
+      } else if (result === "BAD_REQUEST") {
+        ElMessage({
+          message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
+          type: "error",
+          showClose: true,
+          duration: 10000,
+        });
       }
     },
     addDataToPinia(textResponse) {
+      let notext = false;
+      if (!textResponse) {
+        textResponse =
+          "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
+        notext = true;
+      }
       this.messageStore.appendElement({
         id: undefined,
         text: textResponse,
         audio: this.recordToPlay,
+        notext: notext,
       });
     },
   },
@@ -131,7 +228,6 @@ export default {
   align-self: center;
   width: 100%;
   height: 100%;
-  /* border: 2px solid green; */
   border-radius: 10px;
   box-shadow: var(--el-box-shadow-dark);
   overflow: auto;
