@@ -8,6 +8,7 @@
       type="success"
       class="recordButton"
       @mousedown="startRecord"
+      :disabled="buttonDisabled"
       @mouseup="stopRecord">
       <el-icon :size="200">
         <svg
@@ -54,6 +55,7 @@ export default {
       browserCheck: undefined,
       track: undefined,
       statusRercord: "Готов к записи данных.",
+      buttonDisabled: false,
     };
   },
   mounted() {
@@ -117,6 +119,9 @@ export default {
       }, 7000);
     },
     stopRecord() {
+      this.buttonDisabled = true;
+      this.statusRercord =
+        "Отправка данных на сервер для распознования!";
       clearTimeout(this.timer);
       this.record.stop();
       const self = this;
@@ -140,6 +145,7 @@ export default {
         fileData
       );
       if (isSuccsess) {
+        this.buttonDisabled = false;
         this.statusRercord = "Готов к записи!";
         this.addDataToPinia(result);
       }
