@@ -19,6 +19,7 @@
         </svg>
       </el-icon>
     </el-button>
+    <h2 class="statusText">{{ statusRercord }}</h2>
 
     <div class="textContainer">
       <DecoderText
@@ -52,6 +53,7 @@ export default {
       timer: undefined,
       browserCheck: undefined,
       track: undefined,
+      statusRercord: "Готов к записи данных.",
     };
   },
   mounted() {
@@ -59,6 +61,8 @@ export default {
   },
   methods: {
     startRecord() {
+      this.statusRercord =
+        "Идет запись, можете говорить в микрофон! :) ";
       this.audioChunks = [];
       this.record = "";
       this.recordToPlay = "";
@@ -136,6 +140,7 @@ export default {
         fileData
       );
       if (isSuccsess) {
+        this.statusRercord = "Готов к записи!";
         this.addDataToPinia(result);
       }
     },
