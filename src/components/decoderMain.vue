@@ -188,7 +188,7 @@ export default {
       let notext = false;
       if (!textResponse) {
         textResponse =
-          "Нет данных для распознования, возможно вы говорили не четко или \n слишком тихо... ";
+          "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
         notext = true;
       }
       this.messageStore.appendElement({
