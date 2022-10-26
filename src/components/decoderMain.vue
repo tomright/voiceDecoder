@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div v-if="browserCheck" class="container">
     <h3>
       Нажми на иконку микрофона и начни говорить, ниже, придет
       расшифровка.
@@ -27,11 +27,19 @@
         :item="item"></DecoderText>
     </div>
   </div>
+  <div v-if="!browserCheck" class="container">
+    <h1>
+      К сожалению ваш браузер не поддерживает запсь ogg файлов через
+      микрофон, рекомендуем воспользоваться браузером FireFox.
+    </h1>
+    <img src="../assets/img/sorry.jpg" alt="Sorry image" />
+  </div>
 </template>
 
 <script>
 import DecoderText from "./decoderText.vue";
 import { useMesStore } from "../store/message";
+import { ElMessage } from "element-plus";
 
 export default {
   components: { DecoderText },
@@ -42,7 +50,12 @@ export default {
       audioChunks: [],
       messageStore: useMesStore(),
       timer: undefined,
+      browserCheck: undefined,
+      track: undefined,
     };
+  },
+  mounted() {
+    this.browserCheck = MediaRecorder.isTypeSupported("audio/ogg");
   },
   methods: {
     startRecord() {
@@ -58,10 +71,38 @@ export default {
           const self = this;
           this.record.ondataavailable = function (event) {
             self.audioChunks.push(event.data);
-            const track = stream.getTracks();
-            track[0].stop();
+            self.track = stream.getTracks();
+            self.track[0].stop();
           };
+        })
+        .catch(function (error) {
+          if (error.name === "PermissionDeniedError") {
+            ElMessage({
+              message:
+                "Разрешения на использование камеры и микрофона не были предоставлены. " +
+                "Вам нужно разрешить странице доступ к вашим устройствам," +
+                " чтобы демо-версия работала.",
+              type: "error",
+              showClose: true,
+              duration: 3000,
+            });
+          } else if (error.name === "NotAllowedError") {
+            ElMessage({
+              message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+              type: "error",
+              showClose: true,
+              duration: 10000,
+            });
+          } else {
+            ElMessage({
+              message: `getUserMedia error: ${error.name}, ${error}`,
+              type: "error",
+              showClose: true,
+              duration: 10000,
+            });
+          }
         });
+      // const self = this;
       this.timer = setTimeout(() => {
         if (!this.recordToPlay) {
           console.log("Forsed stop");
@@ -73,8 +114,8 @@ export default {
     },
     stopRecord() {
       clearTimeout(this.timer);
-      const self = this;
       this.record.stop();
+      const self = this;
       this.record.addEventListener("stop", () => {
         const audioBlob = new Blob(self.audioChunks, {
           type: "audio/ogg; codecs=opus",
