@@ -33,7 +33,7 @@ export const useMesStore = defineStore("mes", {
         result = response.data.result;
       } else if (response.status === 400) {
         isSuccsess = false;
-        result = response.data.ogg;
+        result = response.data.ogg || response.data.error_code;
       } else {
         isSuccsess = false;
         result = "Ошибка сервера";

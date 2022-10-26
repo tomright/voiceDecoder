@@ -148,6 +148,13 @@ export default {
       this.statusRercord = "Готов к записи!";
       if (isSuccsess) {
         this.addDataToPinia(result);
+      } else if (result === "BAD_REQUEST") {
+        ElMessage({
+          message: `Слишком коротка запись, не удалось ничего распознать. \n Рекомендуем в начале нажимать, а потом говорить. :)`,
+          type: "error",
+          showClose: true,
+          duration: 10000,
+        });
       }
     },
     addDataToPinia(textResponse) {
