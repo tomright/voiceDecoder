@@ -71,6 +71,7 @@ export default {
         self.switcherAudio = true;
       };
 
+      let audioDuration;
       audio.onloadeddata = () => {
         audioDuration = Math.floor(audio.duration * 1000);
         setTimeout(() => {

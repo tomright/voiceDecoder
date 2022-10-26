@@ -42,6 +42,8 @@
 import DecoderText from "./decoderText.vue";
 import { useMesStore } from "../store/message";
 import { ElMessage } from "element-plus";
+import { startsWith } from "lodash";
+import { timestamp } from "@vueuse/shared";
 
 export default {
   components: { DecoderText },
@@ -56,6 +58,10 @@ export default {
       track: undefined,
       statusRercord: "Готов к записи данных.",
       buttonDisabled: false,
+      dateTime: {
+        createDate: undefined,
+        stopDate: undefined,
+      },
     };
   },
   mounted() {
@@ -63,6 +69,7 @@ export default {
   },
   methods: {
     startRecord() {
+      this.dateTime.createDate = Date.now();
       this.statusRercord =
         "Идет запись, можете говорить в микрофон! :) ";
       this.audioChunks = [];
@@ -125,19 +132,34 @@ export default {
     },
     stopRecord() {
       this.buttonDisabled = true;
-      this.statusRercord =
-        "Отправка данных на сервер для распознования!";
-      clearTimeout(this.timer);
       this.record.stop();
-      const self = this;
-      this.record.addEventListener("stop", () => {
-        const audioBlob = new Blob(self.audioChunks, {
-          type: "audio/ogg; codecs=opus",
+      this.dateTime.stopDate = Date.now();
+      clearTimeout(this.timer);
+      const dateDifference =
+        this.dateTime.stopDate - this.dateTime.createDate;
+      if (dateDifference > 1000) {
+        this.statusRercord =
+          "Отправка данных на сервер для распознования!";
+        const self = this;
+        this.record.addEventListener("stop", () => {
+          const audioBlob = new Blob(self.audioChunks, {
+            type: "audio/ogg; codecs=opus",
+          });
+          self.recordToPlay = URL.createObjectURL(audioBlob);
+          const prepareData = this.prepareDataToSend(audioBlob);
+          this.sendData(prepareData);
         });
-        self.recordToPlay = URL.createObjectURL(audioBlob);
-        const prepareData = this.prepareDataToSend(audioBlob);
-        this.sendData(prepareData);
-      });
+      } else {
+        this.buttonDisabled = false;
+        this.statusRercord = "Готов к записи!";
+        ElMessage({
+          message:
+            "Запись меньше секунды, пожалуйста записывайте дольше",
+          type: "warning",
+          showClose: true,
+          duration: 5000,
+        });
+      }
     },
     prepareDataToSend(blob) {
       let fileSend = new File([blob], "test.ogg");
@@ -206,7 +228,6 @@ export default {
   align-self: center;
   width: 100%;
   height: 100%;
-  /* border: 2px solid green; */
   border-radius: 10px;
   box-shadow: var(--el-box-shadow-dark);
   overflow: auto;
