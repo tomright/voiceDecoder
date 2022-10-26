@@ -70,12 +70,13 @@ export default {
       audio.onended = function () {
         self.switcherAudio = true;
       };
-      audio.suspend = function () {
-        self.switcherAudio = true;
+
+      audio.onloadeddata = () => {
+        audioDuration = Math.floor(audio.duration * 1000);
+        setTimeout(() => {
+          self.switcherAudio = true;
+        }, audioDuration);
       };
-      setTimeout(() => {
-        self.switcherAudio = true;
-      }, 7000);
     },
     pauseAudio() {
       this.switcherAudio = true;

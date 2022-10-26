@@ -1,8 +1,8 @@
 <template>
   <div v-if="browserCheck" class="container">
     <h3>
-      Нажми на иконку микрофона и начни говорить, ниже, придет
-      расшифровка.
+      Зажми иконку микрофона и начни говорить, когда закончишь,
+      отпусти кнопку (у нас ограничение на запись 7 секунд)
     </h3>
     <el-button
       type="success"
@@ -111,8 +111,13 @@ export default {
       // const self = this;
       this.timer = setTimeout(() => {
         if (!this.recordToPlay) {
-          console.log("Forsed stop");
           this.stopRecord();
+          ElMessage({
+            message: "7 секунд прошло, можете отпускать кнопку",
+            type: "warning",
+            showClose: true,
+            duration: 10000,
+          });
         } else {
           clearTimeout(this.timer);
         }
@@ -150,7 +155,7 @@ export default {
         this.addDataToPinia(result);
       } else if (result === "BAD_REQUEST") {
         ElMessage({
-          message: `Слишком коротка запись, не удалось ничего распознать. \n Рекомендуем в начале нажимать, а потом говорить. :)`,
+          message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
           type: "error",
           showClose: true,
           duration: 10000,
