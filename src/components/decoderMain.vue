@@ -40,8 +40,8 @@ export default {
       record: "",
       recordToPlay: undefined,
       audioChunks: [],
-      oggFile: undefined,
       messageStore: useMesStore(),
+      timer: undefined,
     };
   },
   methods: {
@@ -56,21 +56,25 @@ export default {
           this.record = new MediaRecorder(stream);
           this.record.start();
           const self = this;
-          setTimeout(() => {
-            if (self.recordToPlay) {
-              return;
-            } else {
-              self.stopRecord();
-            }
-          }, 7000);
           this.record.ondataavailable = function (event) {
             self.audioChunks.push(event.data);
+            const track = stream.getTracks();
+            track[0].stop();
           };
         });
+      this.timer = setTimeout(() => {
+        if (!this.recordToPlay) {
+          console.log("Forsed stop");
+          this.stopRecord();
+        } else {
+          clearTimeout(this.timer);
+        }
+      }, 7000);
     },
     stopRecord() {
+      clearTimeout(this.timer);
       const self = this;
-      self.record.stop();
+      this.record.stop();
       this.record.addEventListener("stop", () => {
         const audioBlob = new Blob(self.audioChunks, {
           type: "audio/ogg; codecs=opus",
