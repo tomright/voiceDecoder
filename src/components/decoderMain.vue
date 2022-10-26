@@ -144,17 +144,24 @@ export default {
       const { isSuccsess, result } = await this.messageStore.send(
         fileData
       );
+      this.buttonDisabled = false;
+      this.statusRercord = "Готов к записи!";
       if (isSuccsess) {
-        this.buttonDisabled = false;
-        this.statusRercord = "Готов к записи!";
         this.addDataToPinia(result);
       }
     },
     addDataToPinia(textResponse) {
+      let notext = false;
+      if (!textResponse) {
+        textResponse =
+          "Нет данных для распознования, возможно вы говорили не четко или \n слишком тихо... ";
+        notext = true;
+      }
       this.messageStore.appendElement({
         id: undefined,
         text: textResponse,
         audio: this.recordToPlay,
+        notext: notext,
       });
     },
   },
