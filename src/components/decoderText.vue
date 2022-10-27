@@ -101,6 +101,7 @@ p {
   justify-content: space-between;
   align-items: center;
   background-color: bisque;
+  border-radius: 10px;
   padding: 5px;
   margin: 10px;
 }
