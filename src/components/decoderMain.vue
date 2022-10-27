@@ -42,8 +42,6 @@
 import DecoderText from "./decoderText.vue";
 import { useMesStore } from "../store/message";
 import { ElMessage } from "element-plus";
-import { startsWith } from "lodash";
-import { timestamp } from "@vueuse/shared";
 
 export default {
   components: { DecoderText },
