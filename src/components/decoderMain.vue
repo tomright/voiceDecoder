@@ -42,8 +42,6 @@
 import DecoderText from "./decoderText.vue";
 import { useMesStore } from "../store/message";
 import { ElMessage } from "element-plus";
-import { startsWith } from "lodash";
-import { timestamp } from "@vueuse/shared";
 
 export default {
   components: { DecoderText },
@@ -123,7 +121,7 @@ export default {
             this.record = new MediaRecorder(
               stream,
               {
-                mimeType: "audio/ogg; codecs=opus",
+                mimeType: "audio/ogg",
               },
               workerOptions
             );
