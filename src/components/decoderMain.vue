@@ -65,7 +65,7 @@ export default {
     };
   },
   mounted() {
-    this.browserCheck = MediaRecorder.isTypeSupported("audio/ogg");
+    this.checkBrowser();
   },
   methods: {
     startRecord() {
@@ -76,45 +76,93 @@ export default {
       this.record = "";
       this.recordToPlay = "";
       this.oggFile = undefined;
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then((stream) => {
-          this.record = new MediaRecorder(stream);
-          this.record.start();
-          const self = this;
-          this.record.ondataavailable = function (event) {
-            self.audioChunks.push(event.data);
-            self.track = stream.getTracks();
-            self.track[0].stop();
-          };
-        })
-        .catch(function (error) {
-          if (error.name === "PermissionDeniedError") {
-            ElMessage({
-              message:
-                "Разрешения на использование камеры и микрофона не были предоставлены. " +
-                "Вам нужно разрешить странице доступ к вашим устройствам," +
-                " чтобы демо-версия работала.",
-              type: "error",
-              showClose: true,
-              duration: 3000,
-            });
-          } else if (error.name === "NotAllowedError") {
-            ElMessage({
-              message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
-              type: "error",
-              showClose: true,
-              duration: 10000,
-            });
-          } else {
-            ElMessage({
-              message: `getUserMedia error: ${error.name}, ${error}`,
-              type: "error",
-              showClose: true,
-              duration: 10000,
-            });
-          }
-        });
+      if (this.browserCheck) {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            this.record = new MediaRecorder(stream);
+            this.record.start();
+            const self = this;
+            this.record.ondataavailable = function (event) {
+              self.audioChunks.push(event.data);
+              self.track = stream.getTracks();
+              self.track[0].stop();
+            };
+          })
+          .catch(function (error) {
+            if (error.name === "PermissionDeniedError") {
+              ElMessage({
+                message:
+                  "Разрешения на использование камеры и микрофона не были предоставлены. " +
+                  "Вам нужно разрешить странице доступ к вашим устройствам," +
+                  " чтобы демо-версия работала.",
+                type: "error",
+                showClose: true,
+                duration: 3000,
+              });
+            } else if (error.name === "NotAllowedError") {
+              ElMessage({
+                message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+                type: "error",
+                showClose: true,
+                duration: 10000,
+              });
+            } else {
+              ElMessage({
+                message: `getUserMedia error: ${error.name}, ${error}`,
+                type: "error",
+                showClose: true,
+                duration: 10000,
+              });
+            }
+          });
+      } else {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            this.record = new MediaRecorder(
+              stream,
+              {
+                mimeType: "audio/ogg; codecs=opus",
+              },
+              workerOptions
+            );
+            this.record.start();
+            const self = this;
+            this.record.ondataavailable = function (event) {
+              self.audioChunks.push(event.data);
+              self.track = stream.getTracks();
+              self.track[0].stop();
+            };
+          })
+          .catch(function (error) {
+            if (error.name === "PermissionDeniedError") {
+              ElMessage({
+                message:
+                  "Разрешения на использование камеры и микрофона не были предоставлены. " +
+                  "Вам нужно разрешить странице доступ к вашим устройствам," +
+                  " чтобы демо-версия работала.",
+                type: "error",
+                showClose: true,
+                duration: 3000,
+              });
+            } else if (error.name === "NotAllowedError") {
+              ElMessage({
+                message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+                type: "error",
+                showClose: true,
+                duration: 10000,
+              });
+            } else {
+              ElMessage({
+                message: `getUserMedia error: ${error.name}, ${error}`,
+                type: "error",
+                showClose: true,
+                duration: 10000,
+              });
+            }
+          });
+      }
       // const self = this;
       this.timer = setTimeout(() => {
         if (!this.recordToPlay) {
@@ -197,6 +245,17 @@ export default {
         audio: this.recordToPlay,
         notext: notext,
       });
+    },
+    checkBrowser() {
+      let thisBrowser = navigator.userAgent
+        .split(")")
+        .reverse()[0]
+        .match(
+          /(?!Gecko|Version|[A-Za-z]+?Web[Kk]it)[A-Z][a-z]+/g
+        )[0];
+      if (thisBrowser === "Chrome" || thisBrowser === "Firefox") {
+        this.browserCheck = true;
+      }
     },
   },
 };
