@@ -73,7 +73,6 @@ export default {
       this.audioChunks = [];
       this.record = "";
       this.recordToPlay = "";
-      this.oggFile = undefined;
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
