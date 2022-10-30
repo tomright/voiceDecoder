@@ -85,34 +85,8 @@ export default {
             self.track[0].stop();
           };
         })
-        .catch(function (error) {
-          if (error.name === "PermissionDeniedError") {
-            ElMessage({
-              message:
-                "Разрешения на использование камеры и микрофона не были предоставлены. " +
-                "Вам нужно разрешить странице доступ к вашим устройствам," +
-                " чтобы демо-версия работала.",
-              type: "error",
-              showClose: true,
-              duration: 3000,
-            });
-          } else if (error.name === "NotAllowedError") {
-            ElMessage({
-              message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
-              type: "error",
-              showClose: true,
-              duration: 10000,
-            });
-          } else {
-            ElMessage({
-              message: `getUserMedia error: ${error.name}, ${error}`,
-              type: "error",
-              showClose: true,
-              duration: 10000,
-            });
-          }
-        });
-      // const self = this;
+        .catch(this.audioErrorHandler);
+
       this.timer = setTimeout(() => {
         if (!this.recordToPlay) {
           this.stopRecord();
@@ -194,6 +168,33 @@ export default {
         audio: this.recordToPlay,
         notext: notext,
       });
+    },
+    audioErrorHandler(errorFromExeptions) {
+      if (errorFromExeptions.name === "PermissionDeniedError") {
+        ElMessage({
+          message:
+            "Разрешения на использование камеры и микрофона не были предоставлены. " +
+            "Вам нужно разрешить странице доступ к вашим устройствам," +
+            " чтобы демо-версия работала.",
+          type: "error",
+          showClose: true,
+          duration: 3000,
+        });
+      } else if (errorFromExeptions.name === "NotAllowedError") {
+        ElMessage({
+          message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+          type: "error",
+          showClose: true,
+          duration: 10000,
+        });
+      } else {
+        ElMessage({
+          message: `getUserMedia error: ${error.name}, ${error}`,
+          type: "error",
+          showClose: true,
+          duration: 10000,
+        });
+      }
     },
   },
 };
