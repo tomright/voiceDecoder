@@ -105,100 +105,99 @@ export default {
     },
     stopRecord() {
       this.buttonDisabled = true;
-        this.record.stop();
-        this.dateTime.stopDate = Date.now();
-        clearTimeout(this.timeLimit);
-        const dateDifference =
-          this.dateTime.stopDate - this.dateTime.createDate;
-        if (dateDifference > 1000) {
-          this.statusRercord =
-            "Отправка данных на сервер для распознования!";
-          const self = this;
-          this.record.addEventListener("stop", () => {
-            const audioBlob = new Blob(self.audioChunks, {
-              type: "audio/ogg; codecs=opus",
-            });
-            self.recordToPlay = URL.createObjectURL(audioBlob);
-            const prepareData = this.prepareDataToSend(audioBlob);
-            this.sendData(prepareData);
+      this.record.stop();
+      this.dateTime.stopDate = Date.now();
+      clearTimeout(this.timeLimit);
+      const dateDifference =
+        this.dateTime.stopDate - this.dateTime.createDate;
+      if (dateDifference > 1000) {
+        this.statusRercord =
+          "Отправка данных на сервер для распознования!";
+        const self = this;
+        this.record.addEventListener("stop", () => {
+          const audioBlob = new Blob(self.audioChunks, {
+            type: "audio/ogg; codecs=opus",
           });
-        } else {
-          this.buttonDisabled = false;
-          this.statusRercord = "Готов к записи!";
-          ElMessage({
-            message:
-              "Запись меньше секунды, пожалуйста записывайте дольше",
-            type: "warning",
-            showClose: true,
-            duration: 5000,
-          });
-        }
-      }
-    },
-    prepareDataToSend(blob) {
-      let fileSend = new File([blob], "test.ogg");
-      let fileData = new FormData();
-      fileData.append("ogg", fileSend);
-      return fileData;
-    },
-    async sendData(fileData) {
-      const { isSuccsess, result } = await this.messageStore.send(
-        fileData
-      );
-      this.buttonDisabled = false;
-      this.statusRercord = "Готов к записи!";
-      if (isSuccsess) {
-        this.addDataToPinia(result);
-      } else if (result === "BAD_REQUEST") {
-        ElMessage({
-          message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
-          type: "error",
-          showClose: true,
-          duration: 10000,
-        });
-      }
-    },
-    addDataToPinia(textResponse) {
-      let notext = false;
-      if (!textResponse) {
-        textResponse =
-          "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
-        notext = true;
-      }
-      this.messageStore.appendElement({
-        id: undefined,
-        text: textResponse,
-        audio: this.recordToPlay,
-        notext: notext,
-      });
-    },
-    audioErrorHandler(errorFromExeptions) {
-      if (errorFromExeptions.name === "PermissionDeniedError") {
-        ElMessage({
-          message:
-            "Разрешения на использование камеры и микрофона не были предоставлены. " +
-            "Вам нужно разрешить странице доступ к вашим устройствам," +
-            " чтобы демо-версия работала.",
-          type: "error",
-          showClose: true,
-          duration: 3000,
-        });
-      } else if (errorFromExeptions.name === "NotAllowedError") {
-        ElMessage({
-          message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
-          type: "error",
-          showClose: true,
-          duration: 10000,
+          self.recordToPlay = URL.createObjectURL(audioBlob);
+          const prepareData = this.prepareDataToSend(audioBlob);
+          this.sendData(prepareData);
         });
       } else {
+        this.buttonDisabled = false;
+        this.statusRercord = "Готов к записи!";
         ElMessage({
-          message: `getUserMedia error: ${error.name}, ${error}`,
-          type: "error",
+          message:
+            "Запись меньше секунды, пожалуйста записывайте дольше",
+          type: "warning",
           showClose: true,
-          duration: 10000,
+          duration: 5000,
         });
       }
     },
+  },
+  prepareDataToSend(blob) {
+    let fileSend = new File([blob], "test.ogg");
+    let fileData = new FormData();
+    fileData.append("ogg", fileSend);
+    return fileData;
+  },
+  async sendData(fileData) {
+    const { isSuccsess, result } = await this.messageStore.send(
+      fileData
+    );
+    this.buttonDisabled = false;
+    this.statusRercord = "Готов к записи!";
+    if (isSuccsess) {
+      this.addDataToPinia(result);
+    } else if (result === "BAD_REQUEST") {
+      ElMessage({
+        message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
+        type: "error",
+        showClose: true,
+        duration: 10000,
+      });
+    }
+  },
+  addDataToPinia(textResponse) {
+    let notext = false;
+    if (!textResponse) {
+      textResponse =
+        "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
+      notext = true;
+    }
+    this.messageStore.appendElement({
+      id: undefined,
+      text: textResponse,
+      audio: this.recordToPlay,
+      notext: notext,
+    });
+  },
+  audioErrorHandler(errorFromExeptions) {
+    if (errorFromExeptions.name === "PermissionDeniedError") {
+      ElMessage({
+        message:
+          "Разрешения на использование камеры и микрофона не были предоставлены. " +
+          "Вам нужно разрешить странице доступ к вашим устройствам," +
+          " чтобы демо-версия работала.",
+        type: "error",
+        showClose: true,
+        duration: 3000,
+      });
+    } else if (errorFromExeptions.name === "NotAllowedError") {
+      ElMessage({
+        message: `Произошла ошибка. Возможно вы не разрешили сайту использовать микрофон. Обновите страницу и нажмите разрешить`,
+        type: "error",
+        showClose: true,
+        duration: 10000,
+      });
+    } else {
+      ElMessage({
+        message: `getUserMedia error: ${error.name}, ${error}`,
+        type: "error",
+        showClose: true,
+        duration: 10000,
+      });
+    }
   },
 };
 </script>
