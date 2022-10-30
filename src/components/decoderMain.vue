@@ -86,9 +86,11 @@ export default {
           };
         })
         .catch(this.audioErrorHandler);
-
-      this.timer = setTimeout(() => {
-        if (!this.recordToPlay) {
+      this.timeLimit(this.recordToPlay);
+    },
+    timeLimit(recordToPlayValue) {
+      return setTimeout(() => {
+        if (!recordToPlayValue) {
           this.stopRecord();
           ElMessage({
             message: "7 секунд прошло, можете отпускать кнопку",
@@ -97,39 +99,40 @@ export default {
             duration: 10000,
           });
         } else {
-          clearTimeout(this.timer);
+          clearTimeout(this.timeLimit);
         }
       }, 7000);
     },
     stopRecord() {
       this.buttonDisabled = true;
-      this.record.stop();
-      this.dateTime.stopDate = Date.now();
-      clearTimeout(this.timer);
-      const dateDifference =
-        this.dateTime.stopDate - this.dateTime.createDate;
-      if (dateDifference > 1000) {
-        this.statusRercord =
-          "Отправка данных на сервер для распознования!";
-        const self = this;
-        this.record.addEventListener("stop", () => {
-          const audioBlob = new Blob(self.audioChunks, {
-            type: "audio/ogg; codecs=opus",
+        this.record.stop();
+        this.dateTime.stopDate = Date.now();
+        clearTimeout(this.timeLimit);
+        const dateDifference =
+          this.dateTime.stopDate - this.dateTime.createDate;
+        if (dateDifference > 1000) {
+          this.statusRercord =
+            "Отправка данных на сервер для распознования!";
+          const self = this;
+          this.record.addEventListener("stop", () => {
+            const audioBlob = new Blob(self.audioChunks, {
+              type: "audio/ogg; codecs=opus",
+            });
+            self.recordToPlay = URL.createObjectURL(audioBlob);
+            const prepareData = this.prepareDataToSend(audioBlob);
+            this.sendData(prepareData);
           });
-          self.recordToPlay = URL.createObjectURL(audioBlob);
-          const prepareData = this.prepareDataToSend(audioBlob);
-          this.sendData(prepareData);
-        });
-      } else {
-        this.buttonDisabled = false;
-        this.statusRercord = "Готов к записи!";
-        ElMessage({
-          message:
-            "Запись меньше секунды, пожалуйста записывайте дольше",
-          type: "warning",
-          showClose: true,
-          duration: 5000,
-        });
+        } else {
+          this.buttonDisabled = false;
+          this.statusRercord = "Готов к записи!";
+          ElMessage({
+            message:
+              "Запись меньше секунды, пожалуйста записывайте дольше",
+            type: "warning",
+            showClose: true,
+            duration: 5000,
+          });
+        }
       }
     },
     prepareDataToSend(blob) {
