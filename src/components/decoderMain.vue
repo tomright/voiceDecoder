@@ -47,16 +47,17 @@ export default {
   components: { DecoderText },
   data() {
     return {
-      record: "",
-      recordToPlay: undefined,
-      audioChunks: [],
+      record: "", // для создания MediaRecorder
+      recordToPlay: undefined, // сохраняем blob запись для добавления в pinia и воспроизведения
+      audioChunks: [], // массив для сохранения "кусков" аудиозаписей
       messageStore: useMesStore(),
-      timer: undefined,
+      timer: undefined, // переменная для помещения в него setTimeout и проверки что запись не длится больше 7 секунд
       browserCheck: undefined,
-      track: undefined,
-      statusRercord: "Готов к записи данных.",
-      buttonDisabled: false,
+      track: undefined, // для отслеживания и отключения работы navigator.mediadevice
+      statusRercord: "Готов к записи данных.", // переменная для вставки в неё значений статуса.
+      buttonDisabled: false, // отключалка\включался кнопки.
       dateTime: {
+        //объект для проверки, что запись на микрофон длилась больше 1 секунды
         createDate: undefined,
         stopDate: undefined,
       },
@@ -123,52 +124,55 @@ export default {
           };
         })
         .catch(this.audioErrorHandler);
-      this.timeLimit(this.recordToPlay);
-    },
-    timeLimit(recordToPlayValue) {
-      return setTimeout(() => {
-        if (!recordToPlayValue) {
+      const self = this;
+      this.timer = setTimeout(() => {
+        if (!self.recordToPlay) {
           this.stopRecord();
           ElMessage({
             message: "7 секунд прошло, можете отпускать кнопку",
             type: "warning",
             showClose: true,
-            duration: 10000,
+            duration: 7000,
           });
         } else {
-          clearTimeout(this.timeLimit);
+          clearTimeout(self.timer);
         }
       }, 7000);
     },
     stopRecord() {
-      this.buttonDisabled = true;
-      this.record.stop();
-      this.dateTime.stopDate = Date.now();
-      clearTimeout(this.timeLimit);
-      const dateDifference =
-        this.dateTime.stopDate - this.dateTime.createDate;
-      if (dateDifference > 1000) {
-        this.statusRercord =
-          "Отправка данных на сервер для распознования!";
-        const self = this;
-        this.record.addEventListener("stop", () => {
-          const audioBlob = new Blob(self.audioChunks, {
-            type: "audio/ogg; codecs=opus",
+      if (
+        this.record.state == "recording" ||
+        this.record.state == "paused"
+      ) {
+        this.buttonDisabled = true;
+        this.record.stop();
+        this.dateTime.stopDate = Date.now();
+        clearTimeout(this.timer); // отключаем таймер если мы остановили запись раньше чем закончился таймер
+        const dateDifference =
+          this.dateTime.stopDate - this.dateTime.createDate;
+        if (dateDifference > 1000) {
+          this.statusRercord =
+            "Отправка данных на сервер для распознования!";
+          const self = this;
+          this.record.addEventListener("stop", () => {
+            const audioBlob = new Blob(self.audioChunks, {
+              type: "audio/ogg; codecs=opus",
+            });
+            self.recordToPlay = URL.createObjectURL(audioBlob);
+            const prepareData = this.prepareDataToSend(audioBlob);
+            this.sendData(prepareData);
           });
-          self.recordToPlay = URL.createObjectURL(audioBlob);
-          const prepareData = this.prepareDataToSend(audioBlob);
-          this.sendData(prepareData);
-        });
-      } else {
-        this.buttonDisabled = false;
-        this.statusRercord = "Готов к записи!";
-        ElMessage({
-          message:
-            "Запись меньше секунды, пожалуйста записывайте дольше",
-          type: "warning",
-          showClose: true,
-          duration: 5000,
-        });
+        } else {
+          this.buttonDisabled = false;
+          this.statusRercord = "Готов к записи!";
+          ElMessage({
+            message:
+              "Запись меньше секунды, пожалуйста записывайте дольше",
+            type: "warning",
+            showClose: true,
+            duration: 5000,
+          });
+        }
       }
     },
   },
