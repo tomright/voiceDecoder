@@ -66,6 +66,43 @@ export default {
     this.browserCheck = MediaRecorder.isTypeSupported("audio/ogg");
   },
   methods: {
+    addDataToPinia(textResponse) {
+      let notext = false;
+      if (!textResponse) {
+        textResponse =
+          "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
+        notext = true;
+      }
+      this.messageStore.appendElement({
+        id: undefined,
+        text: textResponse,
+        audio: this.recordToPlay,
+        notext: notext,
+      });
+    },
+    async sendData(fileData) {
+      const { isSuccsess, result } = await this.messageStore.send(
+        fileData
+      );
+      this.buttonDisabled = false;
+      this.statusRercord = "Готов к записи!";
+      if (isSuccsess) {
+        this.addDataToPinia(result);
+      } else if (result === "BAD_REQUEST") {
+        ElMessage({
+          message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
+          type: "error",
+          showClose: true,
+          duration: 10000,
+        });
+      }
+    },
+    prepareDataToSend(blob) {
+      let fileSend = new File([blob], "test.ogg");
+      let fileData = new FormData();
+      fileData.append("ogg", fileSend);
+      return fileData;
+    },
     startRecord() {
       this.dateTime.createDate = Date.now();
       this.statusRercord =
@@ -134,43 +171,6 @@ export default {
         });
       }
     },
-  },
-  prepareDataToSend(blob) {
-    let fileSend = new File([blob], "test.ogg");
-    let fileData = new FormData();
-    fileData.append("ogg", fileSend);
-    return fileData;
-  },
-  async sendData(fileData) {
-    const { isSuccsess, result } = await this.messageStore.send(
-      fileData
-    );
-    this.buttonDisabled = false;
-    this.statusRercord = "Готов к записи!";
-    if (isSuccsess) {
-      this.addDataToPinia(result);
-    } else if (result === "BAD_REQUEST") {
-      ElMessage({
-        message: `Слишком коротка запись, не удалось ничего распознать. Рекомендуем в начале нажимать, а потом говорить. :)`,
-        type: "error",
-        showClose: true,
-        duration: 10000,
-      });
-    }
-  },
-  addDataToPinia(textResponse) {
-    let notext = false;
-    if (!textResponse) {
-      textResponse =
-        "Нет данных для распознования, возможно вы говорили не четко или слишком тихо... ";
-      notext = true;
-    }
-    this.messageStore.appendElement({
-      id: undefined,
-      text: textResponse,
-      audio: this.recordToPlay,
-      notext: notext,
-    });
   },
   audioErrorHandler(errorFromExeptions) {
     if (errorFromExeptions.name === "PermissionDeniedError") {
