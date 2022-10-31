@@ -11,23 +11,32 @@ export const useMesStore = defineStore("mes", {
   actions: {
     async send(audio) {
       let response;
-      const config = {
-        headers: {
-          Authorization:
-            "Token c3dd999bd9992918837b6a11cd0c2e02f340829d",
-        },
+      // Закаментировано, так как тестовый сервер больше не работает.
+      //Но мне необходимо сделать рефакторинг
+
+      // const config = {
+      //   headers: {
+      //     Authorization:
+      //       "Token ",
+      //   },
+      // };
+      // try {
+      //   response = await axios.post(
+      //     "http://demo.telminov.ru:8091/stt/",
+      //     audio,
+      //     config
+      //   );
+      // } catch (error) {
+      //   response = error.response;
+      // }
+
+      let isSuccsess = true;
+      response = {
+        status: 200,
+        data: { result: "Тестовое сообщение" },
       };
-      try {
-        response = await axios.post(
-          "http://demo.telminov.ru:8091/stt/",
-          audio,
-          config
-        );
-      } catch (error) {
-        response = error.response;
-      }
-      let isSuccsess;
       let result;
+
       if (response.status < 400) {
         isSuccsess = true;
         result = response.data.result;
